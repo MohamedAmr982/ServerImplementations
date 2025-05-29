@@ -6,7 +6,7 @@
 int main(int argc, char** argv) {
 
     if (argc < 3) {
-        printf("Usage: mp_server <queue_len> <port> <data_directory>\n");
+        printf("Usage: server <queue_len> <port> <data_directory>\n");
         exit(0);
     }
 
