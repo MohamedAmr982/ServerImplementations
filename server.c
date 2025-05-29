@@ -13,6 +13,11 @@ int main(int argc, char** argv) {
     const int QUEUE_LEN = atoi(argv[1]);
     const char* PORT = argv[2];
     const char* DATA_DIR_PATH = argv[3];
+
+    int len = strlen(DATA_DIR_PATH);
+    if (DATA_DIR_PATH[len - 1] == '/') {
+        DATA_DIR_PATH[len - 1] == '\0';
+    }
     
     int sockfd = initSocketAndPort(PORT);
 
