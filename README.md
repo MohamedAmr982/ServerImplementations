@@ -1,2 +1,2 @@
 # ServerImplementations
-A comparison between multiprocess vs multithreaded servers
+A comparison between different server implementations.
