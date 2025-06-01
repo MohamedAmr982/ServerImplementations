@@ -14,9 +14,15 @@ int main(int argc, char** argv) {
     const char* PORT = argv[2];
     const char* DATA_DIR_PATH = argv[3];
 
+    // directory path checks
     int len = strlen(DATA_DIR_PATH);
     if (DATA_DIR_PATH[len - 1] == '/') {
         DATA_DIR_PATH[len - 1] == '\0';
+    }
+
+    if (!directoryExists(DATA_DIR_PATH)) {
+        perror("Directory does not exist.\n");
+        exit(1);
     }
     
     int sockfd = initSocketAndPort(PORT);

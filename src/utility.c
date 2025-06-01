@@ -215,8 +215,15 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
 RequestData* parseRequest(char* buff) {
 
     RequestData* request = (RequestData*) malloc(sizeof(RequestData));
-    HeaderList* headerList = makeList(10);
-    request->headers = headerList;
+
+    if (request == NULL) {
+        perror("Could not allocate memory for RequestData struct\n");
+        exit(4);
+    }
+
+    // HeaderList* headerList = makeList(10);
+    // request->headers = headerList;
+    request->headers = NULL;
 
     char* method = strtok(buff, " ");
     request->method = method;
@@ -229,16 +236,24 @@ RequestData* parseRequest(char* buff) {
     char* httpVersion = strtok(NULL, "\r\n");
     
 
-    char* headerName, *headerValue;
-    // headers
-    while ((headerName = strtok(NULL, ":\n")) != NULL) {
-        headerValue = strtok(NULL, "\r\n ");
-        Header header = {
-            .name = headerName,
-            .value = headerValue
-        };
-        push(headerList, &header);
-    }
+    // ignore headers for now
+
+    // char* headerName, *headerValue;
+    // // headers
+    // while ((headerName = strtok(NULL, ":\n")) != NULL) {
+    //     headerValue = strtok(NULL, "\r\n ");
+    //     Header header = {
+    //         .name = headerName,
+    //         .value = headerValue
+    //     };
+    //     push(headerList, &header);
+    // }
 
     return request;
+}
+
+bool directoryExists(const char* dirPath) {
+    struct stat dirStatus;
+    return !stat(dirPath, &dirStatus) 
+        && S_ISDIR(dirStatus.st_mode);
 }

@@ -36,5 +36,6 @@ void sendResponse(int sockfd, const char* buff, size_t size);
 
 void sendFile(int sockfd, int filefd, size_t size);
 
+bool directoryExists(const char* dirPath);
 
 #endif
