@@ -26,7 +26,7 @@ void mainLoop(int sockfd, int queueLen, const char* dataDir);
 
 void handleRequest(int commSockfd, const char* dataDir);
 
-RequestData* parseRequest(char* buff);
+int parseRequest(char* buff, RequestData* requestData);
 
 void prepareFilePath(char* path, size_t pathLen, const char* dataDirPath, const char* fileName);
 

@@ -156,24 +156,24 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
     }
     readBuff[bytesRead] = '\0';
 
-    RequestData* request = parseRequest(readBuff);
+    RequestData request;
+    parseRequest(readBuff, &request);
 
 
-    if (strcmp(request->method, "GET")) {
+    if (strcmp(request.method, "GET")) {
         // return 405 
         size_t len = buildHeader(writeBuff, METHOD_NOT_ALLOWED, -1);
         sendResponse(commSockfd, writeBuff, len);
-        freeList(request->headers);
-        free(request);
+        freeList(request.headers);
         return;
     }
 
     // check if file exists
 
     // len data dir path + len '/' + len file name + len terminator
-    size_t n = strlen(dataDirPath) + 1 + strlen(request->fileName) + 1;
+    size_t n = strlen(dataDirPath) + 1 + strlen(request.fileName) + 1;
     char filePath[n];
-    prepareFilePath(filePath, n, dataDirPath, request->fileName);
+    prepareFilePath(filePath, n, dataDirPath, request.fileName);
 
     int filefd = open(filePath, O_RDONLY);
 
@@ -185,15 +185,15 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
         // 404
         size_t len = buildHeader(writeBuff, NOT_FOUND, -1);
         sendResponse(commSockfd, writeBuff, len);
-        freeList(request->headers);
-        free(request);
+        freeList(request.headers);
+        close(filefd);
         return;
     } else if (filefd == -1) {
         // 500
         size_t len = buildHeader(writeBuff, INTERNAL_SERVER_ERROR, -1);
         sendResponse(commSockfd, writeBuff, len);
-        freeList(request->headers);
-        free(request);
+        freeList(request.headers);
+        close(filefd);
         return;
     }
     
@@ -208,33 +208,31 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
     sendFile(commSockfd, filefd, fileSize);
 
     close(filefd);
-    freeList(request->headers);
-    free(request);
+    freeList(request.headers);
 }
 
-RequestData* parseRequest(char* buff) {
+int parseRequest(char* buff, RequestData* requestData) {
 
-    RequestData* request = (RequestData*) malloc(sizeof(RequestData));
+    // NOTE: both buff and requestData should exist in the same
+    // lifetime because parseRequest sets requestData members to
+    // pointers to locations in buff
 
-    if (request == NULL) {
-        perror("Could not allocate memory for RequestData struct\n");
-        exit(4);
-    }
+    if (requestData == NULL) { return -1; }
 
     // HeaderList* headerList = makeList(10);
     // request->headers = headerList;
-    request->headers = NULL;
+    requestData->headers = NULL;
 
     char* method = strtok(buff, " ");
-    request->method = method;
+    requestData->method = method;
 
     char* fileName = strtok(NULL, " ");
     // make sure that the file name does not start with /
     if (fileName[0] == '/') { fileName++; }
-    request->fileName = fileName;
+    requestData->fileName = fileName;
 
     char* httpVersion = strtok(NULL, "\r\n");
-    
+    requestData->httpVersion = httpVersion;
 
     // ignore headers for now
 
@@ -249,7 +247,7 @@ RequestData* parseRequest(char* buff) {
     //     push(headerList, &header);
     // }
 
-    return request;
+    return 0;
 }
 
 bool directoryExists(const char* dirPath) {
