@@ -18,6 +18,9 @@ HeaderList* makeList(size_t initialLength) {
 }
 
 HeaderList* push(HeaderList* list, Header* header) {
+
+    if (list == NULL || header == NULL) { return list; }
+
     if (list->length >= list->capacity) {
         // expand data array
         list->capacity *= 2;
@@ -35,16 +38,19 @@ HeaderList* push(HeaderList* list, Header* header) {
 }
 
 void insertAt(HeaderList* list, Header* item, size_t position) {
+
+    if (list == NULL || item == NULL) { return; }
+
     if (position < list->length) {
         list->data[position] = *item;
     }
 } 
 
 Header* getAt(HeaderList* list, size_t position) {
-    if (position < list->length) {
-        return &list->data[position];
-    }
-    return NULL;
+
+    if (list == NULL || position >= list->length) { return NULL; }
+
+    return &list->data[position];
 }
 
 void freeList(HeaderList* list) {
