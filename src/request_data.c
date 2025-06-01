@@ -54,6 +54,8 @@ Header* getAt(HeaderList* list, size_t position) {
 }
 
 void freeList(HeaderList* list) {
-    free(list->data);
+    if (list != NULL) {
+        free(list->data);
+    }
     free(list);
 }

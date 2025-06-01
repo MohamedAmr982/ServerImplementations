@@ -8,7 +8,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/build/server",
-        "args": ["10", "8081", "../docs"],
+        "args": ["10", "8081", "../docs/"],
         "stopAtEntry": true,
         "cwd": "${fileDirname}",
         "environment": [],
