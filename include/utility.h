@@ -9,6 +9,8 @@
 #include <sys/stat.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <sys/epoll.h>
 #include <netdb.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -19,12 +21,9 @@
 
 #define BUFF_SIZE 8192
 
-
 int initSocketAndPort(const char* port);
 
-void mainLoop(int sockfd, int queueLen, const char* dataDir);
-
-void handleRequest(int commSockfd, const char* dataDir);
+int handleRequest(int commSockfd, const char* dataDir);
 
 int parseRequest(char* buff, RequestData* requestData);
 

@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "utility.h"
+#include "server.h"
 
 
 int main(int argc, char** argv) {
 
-    if (argc < 3) {
-        printf("Usage: server <queue_len> <port> <data_directory>\n");
+    if (argc < 4) {
+        printf("Usage: server <queue_len> <port> <data_directory> <mode>\n");
+        printf("mode = 0: single threaded server.\n");
+        printf("mode = 1: 1 process/port.\n");
+        printf("mode = 2: 1 thread/request.\n");
         exit(0);
     }
 
@@ -27,16 +30,11 @@ int main(int argc, char** argv) {
         dataDirPath[len - 1] = '\0';
     }
 
+    ServerMode mode = atoi(argv[4]);
     
     int sockfd = initSocketAndPort(PORT);
 
-    mainLoop(sockfd, QUEUE_LEN, dataDirPath);
+    mainLoop(sockfd, QUEUE_LEN, dataDirPath, mode);
     
     return 0;
 }
-
-
-
-
-
-

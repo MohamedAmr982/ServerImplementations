@@ -1,5 +1,4 @@
 #include "utility.h"
-#include "request_data.h"
 
 
 int initSocketAndPort(const char* port) {
@@ -41,27 +40,6 @@ int initSocketAndPort(const char* port) {
     return sockfd;
 }
 
-void mainLoop(int sockfd, int queueLen, const char* dataDir) {
-    struct sockaddr_storage clientAddr;
-    socklen_t clientAddrSize = sizeof(clientAddr);
-    
-    while (true) {
-        if (listen(sockfd, queueLen) == -1) {
-            perror("Could not listen to port.\n");
-            exit(2);
-        }
-        int commSockfd;
-        if ((commSockfd = accept(sockfd, 
-            (struct sockaddr*) &clientAddr, &clientAddrSize)) == -1) {
-            perror("Could not accept incoming request.\n");
-        }
-
-        handleRequest(commSockfd, dataDir);
-        // TODO change later
-        close(commSockfd);
-    }
-}
-
 void prepareFilePath(char* path, size_t pathLen, const char* dataDirPath, const char* fileName) {
     memset(path, 0, sizeof(char) * pathLen);
     strcat(path, dataDirPath);
@@ -89,13 +67,20 @@ size_t buildHeader(char* buff, HttpCode code, size_t contentLength) {
     
     size_t len;
     
+    const char* errorMsg = "<html><h1>Error</h1></html>";
+
     if (contentLength == -1) {
         len = sprintf(
             buff,
-            "%s %d %s\r\n\r\n", 
+            "%s %d %s\r\n%s: %s\r\n%s: %d\r\n\r\n%s", 
             "HTTP/1.1", 
             (int) code, 
-            codeName
+            codeName,
+            "Content-Type",
+            "text/html; charset=UTF-8",
+            "Content-Length",
+            (int) strlen(errorMsg),
+            errorMsg
         );
     } else {
         len = sprintf(
@@ -141,7 +126,7 @@ void sendFile(int sockfd, int filefd, size_t size) {
     }
 }
 
-void handleRequest(int commSockfd, const char* dataDirPath) {
+int handleRequest(int commSockfd, const char* dataDirPath) {
     
     char readBuff[BUFF_SIZE + 1];
     char writeBuff[BUFF_SIZE + 1];
@@ -152,8 +137,14 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
         // return 500 (could not read request)
         size_t len = buildHeader(writeBuff, INTERNAL_SERVER_ERROR, -1);
         sendResponse(commSockfd, writeBuff, len);
-        return;
+        return -1;
     }
+
+    if (bytesRead == 0) {
+        // connection was closed by client
+        return 0;
+    }
+
     readBuff[bytesRead] = '\0';
 
     RequestData request;
@@ -165,7 +156,7 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
         size_t len = buildHeader(writeBuff, METHOD_NOT_ALLOWED, -1);
         sendResponse(commSockfd, writeBuff, len);
         freeList(request.headers);
-        return;
+        return -1;
     }
 
     // check if file exists
@@ -187,14 +178,14 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
         sendResponse(commSockfd, writeBuff, len);
         freeList(request.headers);
         close(filefd);
-        return;
+        return -1;
     } else if (filefd == -1) {
         // 500
         size_t len = buildHeader(writeBuff, INTERNAL_SERVER_ERROR, -1);
         sendResponse(commSockfd, writeBuff, len);
         freeList(request.headers);
         close(filefd);
-        return;
+        return -1;
     }
     
 
@@ -209,6 +200,7 @@ void handleRequest(int commSockfd, const char* dataDirPath) {
 
     close(filefd);
     freeList(request.headers);
+    return 1;
 }
 
 int parseRequest(char* buff, RequestData* requestData) {
